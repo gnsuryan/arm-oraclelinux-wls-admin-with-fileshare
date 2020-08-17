@@ -264,6 +264,35 @@ function updateNetworkRules()
     sudo systemctl restart firewalld
 }
 
+# Mount the Azure file share on all VMs created
+function mountFileShare()
+{
+  echo "Creating mount point"
+  echo "Mount point: $mountpointPath"
+  sudo mkdir -p $mountpointPath
+  if [ ! -d "/etc/smbcredentials" ]; then
+    sudo mkdir /etc/smbcredentials
+  fi
+  if [ ! -f "/etc/smbcredentials/${storageAccountName}.cred" ]; then
+    echo "Crearing smbcredentials"
+    echo "username=$storageAccountName >> /etc/smbcredentials/${storageAccountName}.cred"
+    echo "password=$storageAccountKey >> /etc/smbcredentials/${storageAccountName}.cred"
+    sudo bash -c "echo "username=$storageAccountName" >> /etc/smbcredentials/${storageAccountName}.cred"
+    sudo bash -c "echo "password=$storageAccountKey" >> /etc/smbcredentials/${storageAccountName}.cred"
+  fi
+  echo "chmod 600 /etc/smbcredentials/${storageAccountName}.cred"
+  sudo chmod 600 /etc/smbcredentials/${storageAccountName}.cred
+  echo "//${storageAccountName}.file.core.windows.net/wlsshare $mountpointPath cifs nofail,vers=2.1,credentials=/etc/smbcredentials/${storageAccountName}.cred ,dir_mode=0777,file_mode=0777,serverino"
+  sudo bash -c "echo \"//${storageAccountName}.file.core.windows.net/wlsshare $mountpointPath cifs nofail,vers=2.1,credentials=/etc/smbcredentials/${storageAccountName}.cred ,dir_mode=0777,file_mode=0777,serverino\" >> /etc/fstab"
+  echo "mount -t cifs //${storageAccountName}.file.core.windows.net/wlsshare $mountpointPath -o vers=2.1,credentials=/etc/smbcredentials/${storageAccountName}.cred,dir_mode=0777,file_mode=0777,serverino"
+  sudo mount -t cifs //${storageAccountName}.file.core.windows.net/wlsshare $mountpointPath -o vers=2.1,credentials=/etc/smbcredentials/${storageAccountName}.cred,dir_mode=0777,file_mode=0777,serverino
+  if [[ $? != 0 ]];
+  then
+         echo "Failed to mount //${storageAccountName}.file.core.windows.net/wlsshare $mountpointPath"
+	 exit 1
+  fi
+}
+
 #main script starts here
 
 CURR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -280,10 +309,16 @@ export wlsUserName="$2"
 export wlsPassword="$3"
 export wlsAdminHost="$4"
 export oracleHome="$5"
+export storageAccountName=${6}
+export storageAccountKey=${7}
+export mountpointPath=${8}
+
 
 validateInput
 
 installUtilities
+
+mountFileShare
 
 export WEBLOGIC_DEPLOY_TOOL=https://github.com/oracle/weblogic-deploy-tooling/releases/download/weblogic-deploy-tooling-1.8.1/weblogic-deploy.zip
 export samplApp="https://www.oracle.com/webfolder/technetwork/tutorials/obe/fmw/wls/10g/r3/cluster/session_state/files/shoppingcart.zip"
