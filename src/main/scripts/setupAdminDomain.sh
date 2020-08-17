@@ -9,13 +9,13 @@ function echo_stderr ()
 #Function to display usage message
 function usage()
 {
-  echo_stderr "./setupAdminDomain.sh <wlsDomainName> <wlsUserName> <wlsPassword> <wlsAdminHost> <oracleHome>"  
+  echo_stderr "./setupAdminDomain.sh <wlsDomainName> <wlsUserName> <wlsPassword> <wlsAdminHost> <oracleHome> <storageAccountName> <storageAccountKey> <mountpointPath>"  
 }
 
 function installUtilities()
 {
-    echo "Installing zip unzip wget vnc-server rng-tools bind-utils"
-    sudo yum install -y zip unzip wget vnc-server rng-tools bind-utils
+    echo "Installing zip unzip wget vnc-server rng-tools bind-utils cifs-utils"
+    sudo yum install -y zip unzip wget vnc-server rng-tools bind-utils cifs-utils
 
  #Setting up rngd utils
     attempt=1
@@ -236,6 +236,24 @@ function validateInput()
     if [ -z "$oracleHome" ];
     then
         echo_stderr "oracleHome is required. "
+        exit 1
+    fi
+    
+    if [ -z "$storageAccountName" ];
+    then 
+        echo_stderr "storageAccountName is required. "
+        exit 1
+    fi
+    
+    if [ -z "$storageAccountKey" ];
+    then 
+        echo_stderr "storageAccountKey is required. "
+        exit 1
+    fi
+    
+    if [ -z "$mountpointPath" ];
+    then 
+        echo_stderr "mountpointPath is required. "
         exit 1
     fi
 }
