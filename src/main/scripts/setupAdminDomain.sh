@@ -298,20 +298,20 @@ function mountFileShare()
 CURR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 export BASE_DIR="$(readlink -f ${CURR_DIR})"
 
-if [ $# -ne 5 ]
+if [ $# -ne 8 ]
 then
     usage
 	exit 1
 fi
 
-export wlsDomainName="$1"
-export wlsUserName="$2"
-export wlsPassword="$3"
-export wlsAdminHost="$4"
-export oracleHome="$5"
-export storageAccountName=${6}
-export storageAccountKey=${7}
-export mountpointPath=${8}
+export wlsDomainName="${1}"
+export wlsUserName="${2}"
+export wlsPassword="${3}"
+export wlsAdminHost="${4}"
+export oracleHome="${5}"
+export storageAccountName="${6}"
+export storageAccountKey="${7}"
+export mountpointPath="${8}"
 
 
 validateInput
