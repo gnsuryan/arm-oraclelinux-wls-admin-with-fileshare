@@ -157,11 +157,13 @@
       "name_publicIPAddress": "adminServerVM_PublicIP",
       "name_scriptFile": "setupAdminDomain.sh",
       "name_storageAccount": "[concat(take(replace(parameters('guidValue'),'-',''),6),'olvm')]",
-      "name_fileShare":"wlsshare",
+      "name_share":"wlsshare",
       "name_subnet": "Subnet",
       "name_virtualNetwork": "[concat(parameters('wlsDomainName'),'_VNET')]",
       "ref_networkSecurityGroup": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('name_networkSecurityGroup'))]",
-      "ref_subnet": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('name_virtualNetwork'), variables('name_subnet'))]"
+      "ref_subnet": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('name_virtualNetwork'), variables('name_subnet'))]",
+      "ref_storage": "[resourceId('Microsoft.Storage/storageAccounts', variables('name_storageAccount'))]",
+      "ref_fileService": "[resourceId('Microsoft.Storage/storageAccounts/fileServices', variables('name_storageAccount'), 'default')]",
    },
    "resources": [
       {
@@ -214,12 +216,28 @@
          }
       },
       {
-            "type": "Microsoft.Storage/storageAccounts/fileServices/shares",
-            "apiVersion": "2019-04-01",
-            "name": "[concat(variables('name_storageAccount'), '/default/', variables('name_fileShare'))]",
+            "type": "Microsoft.Storage/storageAccounts/fileServices",
+            "apiVersion": "2019-06-01",
+            "name": "[concat(variables('name_storageAccount'), '/default')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', variables('name_storageAccount'))]"
-            ]
+                "[variables('ref_storage')]"
+            ],
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            }
+      },
+      {
+            "type": "Microsoft.Storage/storageAccounts/fileServices/shares",
+            "apiVersion": "2019-06-01",
+            "name": "[concat(variables('name_storageAccount'), '/default/', variables('name_share'))]",
+            "dependsOn": [
+                "[variables('ref_fileService')]",
+                "[variables('ref_storage')]"
+            ],
+            "properties": {
+                "shareQuota": 10
+            }
       },      
       {
          "type": "Microsoft.Network/publicIPAddresses",
